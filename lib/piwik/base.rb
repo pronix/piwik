@@ -21,15 +21,15 @@ module Piwik
 #
 development:
   piwik_url:
-  auth_tokien:
+  auth_token:
 
 production:
   piwik_url:
-  auth_tokien:
+  auth_token:
 
 test: &TEST
   piwik_url:
-  auth_tokien:
+  auth_token:
 
 cucumber:
   <<: *TEST
@@ -49,7 +49,7 @@ EOF
         end
         temp_config.each { |k,v| config[k.to_sym] = v } if temp_config
         if config[:piwik_url] == nil || config[:auth_token] == nil
-          raise MissingConfiguration, "Please edit config/piwik.yml to include your piwik url and auth_key"
+          raise MissingConfiguration, "Please edit RAILS_ROOT/config/piwik.yml to include your piwik url and auth_key"
         end
         config
       end

@@ -1,6 +1,6 @@
 module Piwik
   class Site < Piwik::Base
-    attr_accessor :name, :main_url
+    attr_accessor :name, :main_url, :fff
     attr_reader :id, :created_at, :config
 
     # Initializes a new <tt>Piwik::Site</tt> object, with the supplied attributes.
@@ -115,11 +115,11 @@ module Piwik
     end
     alias_method :remove_access_from, :give_no_access_to
 
-
-    def get_page_urls(period=:day, date=Date.today)
-      raise UnknownSite, "Site not existent in Piwik yet, call 'save' first" if new?
-      xml = call('Actions.getPageUrls', :idSite => id, :period => period, :date => date, :idSubtable => '')
-      result = XmlSimple.xml_in(xml, {'ForceArray' => false}) 
+    #
+    # TODO добавить фильтры и сортировку 
+    # 
+    def get_page_stats(period=:day, date=Date.today)
+      recursive_get_page_urls(period, date) 
     end
 
     # Returns a hash with a summary of access information for the current site
@@ -189,6 +189,38 @@ module Piwik
     alias_method :pageviews, :actions
 
     private
+    def recursive_get_page_urls( period=:day, date=Date.today, data=get_page_urls(period,date), level=0 )
+      res = {}
+      data["row"].each do |row|
+        if row.key?('idsubdatatable') 
+          res.merge!( recursive_get_page_urls( period, date, get_page_urls(period, date,'', row['idsubdatatable']),level.next))
+        else
+          res.merge!(parse_page_urls(row))
+        end
+      end
+      return res
+    end
+
+    def parse_page_urls(data)
+      {
+        data['label'].first.gsub(/[^0-9a-fA-F]/,'') =>
+        {
+          :url            => data['url'].first,
+          :visits         => data['nb_visits'].first.to_i,
+          :uniq_visitors  => data['nb_uniq_visitors'].first.to_i,
+          :nb_hits        => data['nb_hits'].first.to_i,
+          :time_spent     => data.key?('sum_time_spent') ? data['sum_time_spent'].first.to_i : 0
+        }
+      }   
+    end
+
+    def get_page_urls(period=:day, date=Date.today, expand='', subtable='')
+      raise UnknownSite, "Site not existent in Piwik yet, call 'save' first" if new?
+      xml = call('Actions.getPageUrls', :idSite => id, :period => period, :date => date, :expand => expand, :idSubtable => subtable)
+      result = XmlSimple.xml_in(xml, {'ForceArray' => true}) 
+    end
+
+
       # Calls the supplied Piwik API method, with the supplied parameters.
       #
       # Returns a string containing the XML reply from Piwik, or raises a
