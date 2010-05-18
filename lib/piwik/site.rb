@@ -1,6 +1,6 @@
 module Piwik
   class Site < Piwik::Base
-    attr_accessor :name, :main_url, :fff
+    attr_accessor :name, :main_url
     attr_reader :id, :created_at, :config
 
     # Initializes a new <tt>Piwik::Site</tt> object, with the supplied attributes.
@@ -205,11 +205,11 @@ module Piwik
       {
         data['label'].first.gsub(/[^0-9a-fA-F]/,'') =>
         {
-          :url            => data['url'].first,
-          :visits         => data['nb_visits'].first.to_i,
-          :uniq_visitors  => data['nb_uniq_visitors'].first.to_i,
-          :nb_hits        => data['nb_hits'].first.to_i,
-          :time_spent     => data.key?('sum_time_spent') ? data['sum_time_spent'].first.to_i : 0
+          :url            => data['url'].first, # всегда присутствует 
+          :visits         => data.key?('nb_visits')        ? data['nb_visits'].first.to_i        : 0,
+          :uniq_visitors  => data.key?('nb_uniq_visitors') ? data['nb_uniq_visitors'].first.to_i : 0,
+          :hits           => data.key?('nb_hits')          ? data['nb_hits'].first.to_i          : 0,
+          :time_spent     => data.key?('sum_time_spent')   ? data['sum_time_spent'].first.to_i   : 0
         }
       }   
     end
