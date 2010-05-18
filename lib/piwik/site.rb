@@ -191,13 +191,15 @@ module Piwik
     private
     def recursive_get_page_urls( period=:day, date=Date.today, data=get_page_urls(period,date), level=0 )
       res = {}
-      data["row"].each do |row|
-        if row.key?('idsubdatatable') 
-          res.merge!( recursive_get_page_urls( period, date, get_page_urls(period, date,'', row['idsubdatatable']),level.next))
-        else
-          res.merge!(parse_page_urls(row))
+      if data.kind_of?(Enumerable)
+        data["row"].each do |row|
+          if row.key?('idsubdatatable') 
+            res.merge!( recursive_get_page_urls( period, date, get_page_urls(period, date,'', row['idsubdatatable']),level.next))
+          else
+            res.merge!(parse_page_urls(row))
+          end
         end
-      end
+      end 
       return res
     end
 
